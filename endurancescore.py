@@ -5,9 +5,8 @@ pip3 install garminconnect garth requests readchar
 export EMAIL=<your garmin email>
 export PASSWORD=<your garmin password>
 
-Change API_KEY variable below to your Intervals.icu API Key
-
 """
+
 import datetime
 from datetime import timezone, timedelta
 import json
@@ -15,6 +14,7 @@ import logging
 import argparse
 import os
 import sys
+import base64
 from getpass import getpass
 
 import readchar
@@ -36,11 +36,38 @@ logger = logging.getLogger(__name__)
 # Load environment variables if defined
 email = os.getenv("EMAIL")
 password = os.getenv("PASSWORD")
-tokenstore = os.getenv("GARMINTOKENS") or "~/.garminconnect"
+tokenstore = os.path.expanduser(os.getenv("GARMINTOKENS") or "~/.garminconnect")
 api = None
 
-# Provide your Intervals.icu API key
-API_KEY = "<your intervals.icu API key"
+# API Key handling
+API_KEY = None
+API_KEY_FILE = os.path.join(tokenstore, "api_key.json")
+
+
+def get_api_key(force_new=False):
+    """Load stored API key, or prompt for it if not available or forced"""
+    if not force_new and os.path.exists(API_KEY_FILE):
+        try:
+            with open(API_KEY_FILE, "r") as f:
+                encoded = json.load(f).get("api_key", "")
+                if encoded:
+                    return base64.b64decode(encoded.encode()).decode()
+        except Exception as e:
+            logger.warning(f"Error reading stored API key: {e}")
+
+    # Ask user to enter a new API key
+    key = input("Enter your Intervals.icu API Key: ").strip()
+
+    # Store encoded key
+    try:
+        os.makedirs(os.path.dirname(API_KEY_FILE), exist_ok=True)
+        with open(API_KEY_FILE, "w") as f:
+            json.dump({"api_key": base64.b64encode(key.encode()).decode()}, f)
+        print(f"API key saved to {API_KEY_FILE}")
+    except Exception as e:
+        logger.error(f"Failed to save API key: {e}")
+
+    return key
 
 
 def display_json(api_call, output):
@@ -114,12 +141,10 @@ def init_api(email, password):
 
             # Save Oauth1 and Oauth2 token files to directory for next login
             garmin.garth.dump(tokenstore)
-            print(
-                f"Oauth tokens stored in '{tokenstore}' directory for future use.\n"
-            )
-
             # Re-login Garmin API with tokens
+            print(f"Oauth tokens stored in '{tokenstore}' for future use.\n")
             garmin.login(tokenstore)
+
         except (
             FileNotFoundError,
             GarthHTTPError,
@@ -128,6 +153,11 @@ def init_api(email, password):
         ) as err:
             logger.error(err)
             return None
+    
+    print(
+        f"Login to Garmin Connect succesful.\n"
+    )
+    
 
     return garmin
 
@@ -141,6 +171,7 @@ def get_mfa():
 def get_and_upload_endurance_scores(api, days_back=0, dry_run=False):
     today = datetime.date.today()
     current_date = today - timedelta(days=days_back)
+    start_date = current_date
 
     while current_date <= today:
         date_str = current_date.isoformat()
@@ -150,6 +181,8 @@ def get_and_upload_endurance_scores(api, days_back=0, dry_run=False):
             EnduranceScore = data.get("overallScore")
 
             if EnduranceScore is not None:
+                if current_date == start_date:
+                    print(f"Endurance score data from Intervals.icu:")
                 print(f"{date_str}: {EnduranceScore}")
                 if not dry_run:
                     upload_to_intervals(date_str, EnduranceScore)
@@ -165,6 +198,7 @@ def get_and_upload_endurance_scores(api, days_back=0, dry_run=False):
 
 
 def upload_to_intervals(date_str, EnduranceScore):
+    global API_KEY
     url = f"https://intervals.icu/api/v1/athlete/0/wellness/{date_str}"
     headers = {
         "accept": "*/*",
@@ -174,10 +208,21 @@ def upload_to_intervals(date_str, EnduranceScore):
         "EnduranceScore": EnduranceScore
     }
 
+    def try_upload(api_key):
+        return requests.put(url, json=payload, headers=headers, auth=("API_KEY", api_key))
+
     try:
-        response = requests.put(url, json=payload, headers=headers, auth=("API_KEY", API_KEY))
+        response = try_upload(API_KEY)
         if response.status_code in [200, 201]:
-            print(f"  → Uploaded to Intervals.icu: {EnduranceScore}")
+            print(f"\n  → Uploaded to Intervals.icu: {EnduranceScore}")
+        elif response.status_code == 401:
+            print(f"  → Unauthorized: Your API key may be invalid.")
+            API_KEY = get_api_key(force_new=True)
+            response = try_upload(API_KEY)
+            if response.status_code in [200, 201]:
+                print(f"  → Uploaded with new API key: {EnduranceScore}")
+            else:
+                print(f"  → Failed again ({response.status_code}): {response.text}")
         else:
             print(f"  → Failed to upload ({response.status_code}): {response.text}")
     except Exception as e:
@@ -201,7 +246,7 @@ while True:
         api = init_api(email, password)
 
     if api:
-        # Get endurance score(s) and optionally upload
+        API_KEY = get_api_key()
         get_and_upload_endurance_scores(api, days_back=args.days, dry_run=args.dry_run)
         sys.exit()
 
