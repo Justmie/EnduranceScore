@@ -15,8 +15,8 @@ After the initial get use something like cron to run the script automatically ev
 On the intervals.icu website go to Activities -> Options -> Wellness\
 Add the field: "Endurance Score"
 
-In your Activities calander this will look something like this (with 5361 being the endurance score for that day).\
-![image](https://github.com/user-attachments/assets/5c04b16b-4436-4546-b61c-62bf250c34ce)
+In your Activities calander this will look something like this (with 5088 being the endurance score for that day).\
+![image](https://github.com/user-attachments/assets/15390a35-18d9-404b-b78a-1e4f27a2d0dd)
 
 Then in the "Compare" section of Intervals.icu add a custom graph:\
 ![image](https://github.com/user-attachments/assets/dca49098-956d-4ca0-80ba-7a0e462ba237)
