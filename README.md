@@ -5,9 +5,9 @@ Provided as is. No support, if it breaks something, it's your own responsibility
 
 pip3 install garminconnect garth requests readchar
 
-Commandline options:\
---days <number of days to fetch>     (Number of past days to process (default: 0, only today))  eg: --days 180\
---dry-run                            (Only fetch data and print, do not upload)\
+Commandline options: (No commandline: Only process today)\
+--days \<number of days to fetch\> &emsp;(Number of past days to process)  eg: --days 180\
+--dry-run &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;(Only fetch data and print, do not upload)
 
 First use --dry-run to test if it works for you. Then use --days <number of days> to fetch your Endurance Score history.\
 After the initial get use something like cron to run the script automatically every day.
@@ -25,7 +25,7 @@ Then your graph will look something like this:\
 ![image](https://github.com/user-attachments/assets/1fe27449-abc0-46ab-9ca4-e1a8ca79cced)
 
 
-Credits:
+### Credits:
 
 Cyberjunky for making the Pyhton-garminconnect API wrapper to make it possible to get data from Garmin Connect.
 See: https://github.com/cyberjunky/python-garminconnect
