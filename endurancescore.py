@@ -112,7 +112,7 @@ def init_api(email, password):
     """Initialize Garmin API with your credentials."""
 
     try:
-        # Using Oauth1 and OAuth2 token files from directory
+        # Using OAuth token files from directory
         print(
             f"Trying to login to Garmin Connect using token data from directory '{tokenstore}'...\n"
         )
@@ -139,7 +139,7 @@ def init_api(email, password):
                 mfa_code = get_mfa()
                 garmin.resume_login(result2, mfa_code)
 
-            # Save Oauth1 and Oauth2 token files to directory for next login
+            # Save Oauth token files to directory for next login
             garmin.garth.dump(tokenstore)
             # Re-login Garmin API with tokens
             print(f"Oauth tokens stored in '{tokenstore}' for future use.\n")
