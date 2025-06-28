@@ -3,7 +3,7 @@ Get Garmin Endurancescore into intervals.icu
 
 Provided as is. No support, if it breaks something, it's your own responsibility.
 
-Install prerequisites with pip:
+Install prerequisites with pip:\
 pip3 install garminconnect garth requests readchar
 
 Commandline options: (No commandline: Only process today)\
