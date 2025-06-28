@@ -3,6 +3,7 @@ Get Garmin Endurancescore into intervals.icu
 
 Provided as is. No support, if it breaks something, it's your own responsibility.
 
+Install prerequisites with pip:
 pip3 install garminconnect garth requests readchar
 
 Commandline options: (No commandline: Only process today)\
@@ -27,5 +28,5 @@ Then your graph will look something like this:\
 
 ### Credits:
 
-Cyberjunky for making the Pyhton-garminconnect API wrapper to make it possible to get data from Garmin Connect.
+Cyberjunky for making the Python-garminconnect API wrapper to make it possible to get data from Garmin Connect.
 See: https://github.com/cyberjunky/python-garminconnect
